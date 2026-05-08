@@ -42,7 +42,7 @@ echo  （首次安装约需 1-5 分钟，请勿关闭窗口）
 echo  (First install takes ~1-5 min, do not close this window)
 echo.
 
-python -m pip install -r requirements_vision.txt
+python -m pip install -r requirements.txt
 
 if errorlevel 1 (
     echo.
@@ -76,8 +76,8 @@ echo.
 echo  ══════════════════════════════════════════════
 echo  安装完成！/ Installation complete!
 echo.
-echo  现在可以双击 launch_vision.bat 启动视觉驾驶员
-echo  Now run launch_vision.bat to start the vision driver
+echo  现在可以双击 launch.bat 启动视觉驾驶员
+echo  Now run launch.bat to start the vision driver
 echo  ══════════════════════════════════════════════
 echo.
 pause
