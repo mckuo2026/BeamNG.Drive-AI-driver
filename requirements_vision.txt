@@ -1,0 +1,25 @@
+# BeamNG 云电脑视觉驾驶员 依赖清单
+# Cloud Vision Driver dependencies
+#
+# 安装方法：双击运行 install_vision.bat
+# Install: double-click install_vision.bat
+
+# ── 核心依赖（必须）Core (required) ──────────
+opencv-python>=4.8.0        # 车道线检测 / Lane detection
+mss>=9.0.1                  # 屏幕截取 / Screen capture
+Pillow>=10.0.0              # GUI 预览图像 / GUI preview images
+numpy>=1.24.0               # 数组计算 / Array math
+pynput>=1.7.6               # 键盘模拟 / Keyboard simulation
+
+# ── 窗口检测 Window detection ─────────────────
+pygetwindow>=0.0.9          # 查找游戏窗口 / Locate game window
+
+# ── AI 障碍物检测（可选）Obstacle detection (optional) ──
+# 首次运行会自动下载 yolov8n.pt (~6MB)
+# First run auto-downloads yolov8n.pt (~6MB)
+ultralytics>=8.0.0
+
+# ── 注意 Note ─────────────────────────────────
+# 原版 BeamNGpy 依赖不在此列，两个版本互不干扰
+# Original BeamNGpy deps are NOT listed here;
+# both versions can coexist in the same environment.
