@@ -130,6 +130,9 @@ A: 点击「🔄 恢复车辆」，或等待自动恢复（约 15 秒触发）�
 **Q: 想换地图/车辆？**  
 A: 先点「⏹ 停止」，修改设置后重新启动。
 
+**Q: 为什么加载出来车辆生成在海里？**  
+A: 这是目前还未修复的 bug。解决方法：直接按 **ESC**，然后选择地图，找一个位置，点击「Quick Travel」传送过去即可。
+
 ---
 
 ## 📖 English
@@ -246,6 +249,9 @@ A: Click **🔄 Recover**, or wait for auto-recovery to trigger (~15 seconds).
 **Q: Want to change map/vehicle?**  
 A: Click **⏹ Stop** first, change settings, then relaunch.
 
+**Q: Why does the vehicle spawn in the ocean?**  
+A: This is a known bug that hasn't been fixed yet. Workaround: press **ESC**, go to the map, select a location, and click **Quick Travel** to teleport there.
+
 ---
 
 ## 📖 日本語
@@ -361,6 +367,9 @@ A: **🔄 Recover** をクリックするか、自動回復を待ちます（約
 
 **Q: マップや車両を変更したい？**  
 A: まず **⏹ Stop** をクリックし、設定を変更してから再起動してください。
+
+**Q: 車両が海の中にスポーンするのはなぜ？**  
+A: 現在未修正の既知バグです。対処法：**ESC** を押してマップを開き、任意の場所を選んで **Quick Travel** をクリックするとテレポートできます。
 
 ---
 
