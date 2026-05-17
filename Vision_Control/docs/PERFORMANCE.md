@@ -1,6 +1,6 @@
 # Performance
 
-The v1.0 goal is responsive visual control on normal Windows laptops and cloud
+The current goal is responsive visual control on normal Windows laptops and cloud
 gaming setups.
 
 ## Targets

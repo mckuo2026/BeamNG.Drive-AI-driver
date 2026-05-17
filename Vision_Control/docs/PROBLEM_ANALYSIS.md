@@ -9,7 +9,7 @@ Earlier visual-driver prototypes had three major failure modes:
 3. Desktop-region capture could include the driver UI or other windows placed
    over the game.
 
-Vision_Control v1.0 addresses these with adaptive LAB road segmentation,
+The current driver addresses these with adaptive LAB road segmentation,
 virtual gamepad output, capture-panel exclusion, and a target-window capture
 backend.
 

@@ -17,7 +17,7 @@ from .config import Config
 
 def selftest() -> int:
     """Print module availability so users can verify install."""
-    print(f"Vision_Control v{__version__} — selftest")
+    print(f"BeamNG and Horizon Driver v{__version__} — selftest")
     print("-" * 50)
 
     checks: list[tuple[str, callable]] = [
@@ -101,8 +101,10 @@ def gui() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="vision_control",
-                                     description="Vision_Control autopilot")
+    parser = argparse.ArgumentParser(
+        prog="vision_control",
+        description="BeamNG and Horizon Driver",
+    )
     parser.add_argument("--selftest", action="store_true",
                         help="check installed dependencies and exit")
     parser.add_argument("--headless", action="store_true",

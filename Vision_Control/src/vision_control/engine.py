@@ -77,6 +77,8 @@ class VisionEngine:
 
     PREVIEW_TARGET_SIZE: tuple[int, int] = (640, 360)
     CAPTURE_FPS:         int             = 60
+    BLACK_FRAME_MEAN_THRESHOLD: float = 5.0
+    BLACK_FRAME_FALLBACK_COUNT: int = 30
 
     def __init__(self) -> None:
         self._lock        = threading.Lock()
@@ -95,6 +97,10 @@ class VisionEngine:
         self._cap:        Any | None        = None
         self._seg:        AdaptiveLabSegmenter | None = None
         self._gamepad:    GamepadBackend | None     = None
+        self._capture_window_title: str = ""
+        self._capture_mode: str = "auto"
+        self._capture_roi: Roi | None = None
+        self._black_frame_count: int = 0
 
     # ── thread-safe getters / setters ─────────────────────────────────────
     def get_state(self) -> tuple[State, str]:
@@ -214,6 +220,10 @@ class VisionEngine:
             # path is unavailable for the cloud client, it falls back to DXGI ROI.
             full_roi = Roi(left_pct=0.0, right_pct=1.0,
                            top_pct=0.0,  bottom_pct=1.0)
+            self._capture_window_title = window_title
+            self._capture_mode = (capture_backend or "auto").lower()
+            self._capture_roi = full_roi
+            self._black_frame_count = 0
             self._cap = self._open_capture(window_title, full_roi, capture_backend)
             self._log(f"Capture started ({self.PREVIEW_TARGET_SIZE[0]}x"
                       f"{self.PREVIEW_TARGET_SIZE[1]} @ {self.CAPTURE_FPS}fps, "
@@ -312,6 +322,8 @@ class VisionEngine:
             bgr = self._cap.latest()
             if bgr is None:
                 time.sleep(0.005)
+                continue
+            if self._maybe_switch_black_window_capture(bgr):
                 continue
 
             paused = self._pause_evt.is_set()
@@ -433,6 +445,48 @@ class VisionEngine:
                     (8, 16), cv2.FONT_HERSHEY_SIMPLEX, 0.42,
                     (255, 255, 255), 1, cv2.LINE_AA)
         return out
+
+    def _maybe_switch_black_window_capture(self, bgr: np.ndarray) -> bool:
+        """Fallback from window-only capture when Auto sees repeated black frames."""
+        if self._capture_mode != "auto" or self._cap is None:
+            return False
+        if self._cap.stats.get("backend") != "window":
+            return False
+
+        if float(bgr.mean()) < self.BLACK_FRAME_MEAN_THRESHOLD:
+            self._black_frame_count += 1
+        else:
+            self._black_frame_count = 0
+            return False
+
+        if self._black_frame_count < self.BLACK_FRAME_FALLBACK_COUNT:
+            return False
+
+        self._log(
+            "Window-only capture returned repeated black frames; "
+            "switching to DXGI ROI."
+        )
+        old_cap = self._cap
+        try:
+            old_cap.stop()
+        except Exception:  # noqa: BLE001
+            pass
+
+        if self._capture_roi is None:
+            self._capture_roi = Roi(left_pct=0.0, right_pct=1.0, top_pct=0.0, bottom_pct=1.0)
+        cap = RoiCapture(
+            self._capture_window_title,
+            self._capture_roi,
+            target_size=self.PREVIEW_TARGET_SIZE,
+            target_fps=self.CAPTURE_FPS,
+        )
+        cap.start()
+        self._cap = cap
+        self._black_frame_count = 0
+        with self._lock:
+            self._latest_telemetry.capture_backend = "dxcam"
+        self._log("DXGI ROI fallback capture started.")
+        return True
 
     def _cleanup(self) -> None:
         if self._gamepad is not None:

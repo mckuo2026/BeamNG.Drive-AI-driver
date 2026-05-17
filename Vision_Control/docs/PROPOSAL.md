@@ -1,7 +1,7 @@
 # Proposal
 
 Vision_Control should behave like a small, practical driver panel rather than
-a research demo. The v1.0 design favors fast setup, clear safety controls, and
+a research demo. The current design favors fast setup, clear safety controls, and
 good cloud-client compatibility.
 
 ## Proposed Pipeline

@@ -1,12 +1,12 @@
-"""M1 integration preview — capture → road mask → drivable area → Pure Pursuit.
+"""Integration preview: capture, road mask, drivable area, and Pure Pursuit.
 
-This is the closest thing to "auto-driving" Vision_Control has at M1.
 It does NOT touch the gamepad by default (so it's safe to run anywhere).
 Pass `--drive` to also push the computed ControlTarget to vgamepad.
 
 Usage:
     python -m vision_control.tools.preview "GeForce NOW"
     python -m vision_control.tools.preview "GeForce NOW" --drive
+    python -m vision_control.tools.preview "GeForce NOW" --capture auto
     python -m vision_control.tools.preview "GeForce NOW" --record out.mp4
 
 Key bindings (preview window):
@@ -25,9 +25,12 @@ import cv2
 import numpy as np
 
 from ..capture.dxcam_roi import (
-    RoiCapture, _safe_preview_pos, _draw_perception_roi_overlay,
+    RoiCapture,
+    _draw_perception_roi_overlay,
     _hide_cv2_window_from_capture,
+    _safe_preview_pos,
 )
+from ..capture.window_client import WindowClientCapture
 from ..capture.window_focus import get_monitor_rect_for_hwnd
 from ..config import Roi
 from ..perception import CLASS_ROAD, apply_perception_roi
@@ -74,14 +77,44 @@ def _draw_control_bar(frame: np.ndarray, steer: float,
                   (80, 80, 220), -1)
 
 
+def _open_capture(args, roi: Roi):
+    if args.capture in ("auto", "window"):
+        try:
+            cap = WindowClientCapture(
+                args.window,
+                roi,
+                target_size=(args.width, args.height),
+                target_fps=args.fps,
+            )
+            cap.start()
+            print("[preview] capture backend: window")
+            return cap
+        except RuntimeError as exc:
+            if args.capture != "auto":
+                raise
+            print(f"[preview] window capture unavailable; falling back to dxcam: {exc}")
+
+    cap = RoiCapture(
+        args.window,
+        roi,
+        target_size=(args.width, args.height),
+        target_fps=args.fps,
+    )
+    cap.start()
+    print("[preview] capture backend: dxcam")
+    return cap
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         prog="vision_control.tools.preview",
-        description="M1 integration preview: capture → segmenter → planner.",
+        description="Integration preview: capture, segmenter, planner.",
     )
     p.add_argument("window", help="window title (substring match)")
     p.add_argument("--drive", action="store_true",
                    help="also push ControlTarget to vgamepad (BeamNG control)")
+    p.add_argument("--capture", choices=["auto", "window", "dxcam"], default="auto",
+                   help="capture backend (default: auto)")
     p.add_argument("--width",  type=int, default=640, help="capture target width")
     p.add_argument("--height", type=int, default=360, help="capture target height")
     p.add_argument("--fps",    type=int, default=60,  help="capture fps")
@@ -97,11 +130,8 @@ def main(argv: list[str] | None = None) -> int:
     # preview always shows the entire window so you can see context.
     full_roi = Roi(left_pct=0.0, right_pct=1.0, top_pct=0.0, bottom_pct=1.0)
     perc_roi = Roi()  # config defaults — drawn as a yellow rectangle overlay
-    cap = RoiCapture(args.window, full_roi,
-                     target_size=(args.width, args.height),
-                     target_fps=args.fps)
     try:
-        cap.start()
+        cap = _open_capture(args, full_roi)
     except RuntimeError as exc:
         print(f"ERROR: {exc}")
         return 1
@@ -141,9 +171,11 @@ def main(argv: list[str] | None = None) -> int:
     ph = int(args.height * args.scale)
     cv2.resizeWindow(win, pw, ph)
     # Auto-position outside the capture region to dodge the infinite mirror.
-    mon = get_monitor_rect_for_hwnd(cap._hwnd) or (0, 0, 1920, 1080)
-    if cap._region:
-        x_, y_ = _safe_preview_pos(cap._region, (pw, ph), mon)
+    cap_hwnd = getattr(cap, "_hwnd", 0)
+    cap_region = getattr(cap, "_region", None)
+    mon = get_monitor_rect_for_hwnd(cap_hwnd) or (0, 0, 1920, 1080)
+    if cap_region:
+        x_, y_ = _safe_preview_pos(cap_region, (pw, ph), mon)
         cv2.moveWindow(win, x_, y_)
     # And — belt + braces — make the window invisible to dxcam itself.
     if _hide_cv2_window_from_capture(win):

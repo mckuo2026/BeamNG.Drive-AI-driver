@@ -52,11 +52,21 @@ class WindowClientCapture:
         self._frames_grabbed = 0
         self._frames_returned = 0
         self._last_error: str = ""
+        self._surface_size: tuple[int, int] = (0, 0)
+        self._cv2: Any | None = None
+        self._win32gui: Any | None = None
+        self._win32ui: Any | None = None
+        self._hwnd_dc: Any | None = None
+        self._mfc_dc: Any | None = None
+        self._save_dc: Any | None = None
+        self._bitmap: Any | None = None
+        self._old_bitmap: Any | None = None
 
     def start(self) -> None:
         """Find the window, verify one frame, then spawn the capture thread."""
         if self._thread is not None:
             return
+        self._load_modules()
         match = find_window_by_title([self.window_title], exact=False)
         if match is None:
             raise RuntimeError(f"No visible window matching {self.window_title!r}.")
@@ -79,6 +89,7 @@ class WindowClientCapture:
         if self._thread is not None:
             self._thread.join(timeout=1.5)
             self._thread = None
+        self._release_surface()
 
     def latest(self) -> np.ndarray | None:
         """Most recent BGR frame at target_size, or None if no frame exists."""
@@ -116,13 +127,11 @@ class WindowClientCapture:
                 next_tick = time.perf_counter()
 
     def _grab_once(self) -> np.ndarray | None:
-        try:
-            import cv2
-            import win32gui
-            import win32ui
-        except ImportError as exc:
-            self._last_error = f"missing dependency: {exc}"
+        if not self._load_modules():
             return None
+
+        assert self._cv2 is not None
+        assert self._win32gui is not None
 
         client = get_client_rect_screen(self._hwnd)
         if client is None:
@@ -134,54 +143,99 @@ class WindowClientCapture:
             self._last_error = "client rect is empty"
             return None
 
-        hwnd_dc = mfc_dc = save_dc = bitmap = None
-        try:
-            hwnd_dc = win32gui.GetWindowDC(self._hwnd)
-            mfc_dc = win32ui.CreateDCFromHandle(hwnd_dc)
-            save_dc = mfc_dc.CreateCompatibleDC()
-            bitmap = win32ui.CreateBitmap()
-            bitmap.CreateCompatibleBitmap(mfc_dc, width, height)
-            save_dc.SelectObject(bitmap)
+        if not self._ensure_surface(width, height):
+            return None
+        assert self._save_dc is not None
+        assert self._bitmap is not None
 
+        try:
             flags = PW_CLIENTONLY | PW_RENDERFULLCONTENT
-            ok = bool(_user32.PrintWindow(self._hwnd, save_dc.GetSafeHdc(), flags))
+            ok = bool(_user32.PrintWindow(self._hwnd, self._save_dc.GetSafeHdc(), flags))
             if not ok:
                 self._last_error = "PrintWindow returned false"
                 return None
 
-            raw = bitmap.GetBitmapBits(True)
+            raw = self._bitmap.GetBitmapBits(True)
             bgra = np.frombuffer(raw, dtype=np.uint8).reshape((height, width, 4))
             bgr = bgra[:, :, :3].copy()
             cropped = self._crop_roi(bgr)
             tw, th = self.target_size
             if cropped.shape[1] != tw or cropped.shape[0] != th:
-                cropped = cv2.resize(cropped, (tw, th), interpolation=cv2.INTER_AREA)
+                cropped = self._cv2.resize(cropped, (tw, th), interpolation=self._cv2.INTER_AREA)
             self._last_error = ""
             return cropped
         except Exception as exc:  # noqa: BLE001
             self._last_error = str(exc)
             return None
-        finally:
-            if bitmap is not None:
-                try:
-                    win32gui.DeleteObject(bitmap.GetHandle())
-                except Exception:
-                    pass
-            if save_dc is not None:
-                try:
-                    save_dc.DeleteDC()
-                except Exception:
-                    pass
-            if mfc_dc is not None:
-                try:
-                    mfc_dc.DeleteDC()
-                except Exception:
-                    pass
-            if hwnd_dc is not None:
-                try:
-                    win32gui.ReleaseDC(self._hwnd, hwnd_dc)
-                except Exception:
-                    pass
+
+    def _load_modules(self) -> bool:
+        if self._cv2 is not None and self._win32gui is not None and self._win32ui is not None:
+            return True
+        try:
+            import cv2
+            import win32gui
+            import win32ui
+        except ImportError as exc:
+            self._last_error = f"missing dependency: {exc}"
+            return False
+        self._cv2 = cv2
+        self._win32gui = win32gui
+        self._win32ui = win32ui
+        return True
+
+    def _ensure_surface(self, width: int, height: int) -> bool:
+        if self._surface_size == (width, height) and self._save_dc and self._bitmap:
+            return True
+        self._release_surface()
+        assert self._win32gui is not None
+        assert self._win32ui is not None
+
+        try:
+            self._hwnd_dc = self._win32gui.GetWindowDC(self._hwnd)
+            self._mfc_dc = self._win32ui.CreateDCFromHandle(self._hwnd_dc)
+            self._save_dc = self._mfc_dc.CreateCompatibleDC()
+            self._bitmap = self._win32ui.CreateBitmap()
+            self._bitmap.CreateCompatibleBitmap(self._mfc_dc, width, height)
+            self._old_bitmap = self._save_dc.SelectObject(self._bitmap)
+            self._surface_size = (width, height)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            self._last_error = f"GDI surface allocation failed: {exc}"
+            self._release_surface()
+            return False
+
+    def _release_surface(self) -> None:
+        if self._save_dc is not None and self._old_bitmap is not None:
+            try:
+                self._save_dc.SelectObject(self._old_bitmap)
+            except Exception:
+                pass
+        if self._bitmap is not None and self._win32gui is not None:
+            try:
+                self._win32gui.DeleteObject(self._bitmap.GetHandle())
+            except Exception:
+                pass
+        if self._save_dc is not None:
+            try:
+                self._save_dc.DeleteDC()
+            except Exception:
+                pass
+        if self._mfc_dc is not None:
+            try:
+                self._mfc_dc.DeleteDC()
+            except Exception:
+                pass
+        if self._hwnd_dc is not None and self._win32gui is not None:
+            try:
+                self._win32gui.ReleaseDC(self._hwnd, self._hwnd_dc)
+            except Exception:
+                pass
+        self._hwnd_dc = None
+        self._mfc_dc = None
+        self._save_dc = None
+        self._bitmap = None
+        self._old_bitmap = None
+        self._surface_size = (0, 0)
 
     def _crop_roi(self, frame: np.ndarray) -> np.ndarray:
         h, w = frame.shape[:2]

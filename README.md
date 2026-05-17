@@ -10,9 +10,9 @@ simulators. It reads the game window, identifies the drivable road area, plans a
 lookahead point, and sends smooth analog steering, throttle, and brake output
 through a virtual Xbox controller.
 
-The v1.0 project lives in [`Vision_Control/`](Vision_Control/).
+The v0.5.0 project lives in [`Vision_Control/`](Vision_Control/).
 
-### v1.0 Summary
+### v0.5.0 Summary
 
 - Multilingual README and control panel: English, Chinese, Japanese.
 - Target-window capture mode to reduce interference from windows over the game.
@@ -40,9 +40,9 @@ BeamNG.drive、类似 Forza Horizon 的赛车游戏、云游戏窗口和本地�
 它不调用游戏 API，而是读取游戏窗口画面，识别可行驶路面，计算前视目标点，
 再通过虚拟 Xbox 手柄输出平滑的转向、油门和刹车。
 
-v1.0 项目位于 [`Vision_Control/`](Vision_Control/)。
+v0.5.0 项目位于 [`Vision_Control/`](Vision_Control/)。
 
-### v1.0 简介
+### v0.5.0 简介
 
 - README 和控制面板支持英文、中文、日文。
 - 支持目标窗口捕获，减少游戏画面上方其他窗口对识别算法的干扰。
@@ -70,9 +70,9 @@ BeamNG and Horizon Driver は、BeamNG.drive、Forza Horizon 系のレースゲ�
 読み取り、走行可能な路面を検出し、前方の目標点を計算して、仮想 Xbox
 コントローラーでステアリング、アクセル、ブレーキを出力します。
 
-v1.0 プロジェクトは [`Vision_Control/`](Vision_Control/) にあります。
+v0.5.0 プロジェクトは [`Vision_Control/`](Vision_Control/) にあります。
 
-### v1.0 概要
+### v0.5.0 概要
 
 - README と操作パネルは英語、中国語、日本語に対応。
 - ターゲットウィンドウキャプチャにより、ゲーム上に重なった別ウィンドウの影響を

@@ -2,11 +2,11 @@
 
 All notable changes to BeamNG and Horizon Driver are documented here.
 
-## [1.0.0] - 2026-05-17
+## [0.5.0] - 2026-05-17
 
 ### Added
 
-- English-first v1.0 README and project summary.
+- Multilingual README and project summary.
 - Multilingual control panel with English, Chinese, and Japanese UI options.
 - Capture backend selector with `Auto`, `Window only`, and `DXGI ROI` modes.
 - `WindowClientCapture`, a Win32 target-window capture backend that reads the
@@ -16,7 +16,8 @@ All notable changes to BeamNG and Horizon Driver are documented here.
 
 ### Changed
 
-- Version bumped to `1.0.0`.
+- Version set to `0.5.0`; `1.0.0` is reserved for stable five-minute driving
+  with focus watchdog, obstacle handling, and stuck recovery.
 - README files now include English, Chinese, and Japanese sections.
 - Default language changed to English.
 - Default window candidates now include GeForce NOW, BeamNG.drive, Forza
