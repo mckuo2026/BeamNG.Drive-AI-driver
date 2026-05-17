@@ -1,11 +1,10 @@
 # Progress
 
-## Current Release: v0.5.0
+## Current Release: v0.6.0
 
-This release is a capable visual-driver foundation, not a final stability
-release. The package is intentionally versioned as `0.5.0` until the focus
-watchdog, obstacle handling, stuck recovery, and five-minute scenario stability
-are proven.
+`0.6.0` closes M2 by adding the focus watchdog. The package will hold at
+`0.6.x` until obstacle handling, stuck recovery, and five-minute scenario
+stability evidence are in place.
 
 ## Milestones
 
@@ -13,7 +12,7 @@ are proven.
 | --- | --- | --- |
 | M0: Architecture and project split | Done | Separate visual-driver package with docs, setup scripts, and tests. |
 | M1: Capture, perception fallback, control demos | Done | DXGI ROI capture, adaptive LAB road segmentation, and vgamepad control. |
-| M2: GUI and engine integration | Partial | Multilingual UI, telemetry, start/pause/stop, and Auto capture mode are implemented. Focus watchdog remains open. |
+| M2: GUI and engine integration | Done | Multilingual UI, telemetry, start/pause/stop, Auto capture with black-frame fallback, and focus watchdog. |
 | M3: Robust driving behavior | Pending | Obstacle cone, depth, stuck detection, and recovery are not complete. |
 | M4: 1.0 hardening | Pending | Requires stable five-minute driving and release-quality scenario evidence. |
 
@@ -32,10 +31,10 @@ are proven.
 | ISSUE-015 | Fixed | `WindowClientCapture` reuses GDI DC/bitmap resources instead of reallocating every frame. |
 | ISSUE-016 | Fixed | Auto capture mode falls back to DXGI ROI after repeated black `PrintWindow` frames. |
 | ISSUE-017 | Fixed | `tools.preview` accepts `--capture auto|window|dxcam` to match the GUI/headless path. |
+| ISSUE-018 | Fixed | Focus watchdog auto-pauses when Drive is on and the captured game window loses foreground (no auto-resume; 3 s grace period after Start). |
 
 ## Open Work
 
-- Focus watchdog: pause or neutralize output when the cloud game window loses focus.
 - Obstacle cone: detect non-road hazards in the forward driving corridor.
 - Stuck recovery: use visual motion checks and controlled reverse/steer escape.
 - ONNX model path: ship or document a lightweight road/obstacle segmentation model.

@@ -10,7 +10,7 @@ simulators. It does not call a game API. Instead, it captures the visible game
 client, detects the drivable road area, computes a lookahead target, and sends
 analog driving input through a virtual Xbox controller.
 
-### v0.5.0 Description
+### v0.6.0 Description
 
 This release is built for low-latency cloud-computer use: GeForce NOW, Shadow
 PC, Xbox Cloud Gaming, or any Windows game window with a stable driving camera.
@@ -135,7 +135,7 @@ BeamNG.drive、类似 Forza Horizon 的赛车游戏、云游戏窗口和本地�
 它不调用游戏 API，而是捕获游戏客户端画面，识别可行驶路面，计算前视目标点，
 并通过虚拟 Xbox 手柄输出类比驾驶控制。
 
-### v0.5.0 说明
+### v0.6.0 说明
 
 此版本面向低延迟云电脑和云游戏使用场景，例如 GeForce NOW、Shadow PC、Xbox
 Cloud Gaming，或任何带稳定驾驶视角的 Windows 游戏窗口。界面默认英文，并可在
@@ -253,7 +253,7 @@ BeamNG and Horizon Driver は、BeamNG.drive、Forza Horizon 系のレースゲ�
 取得し、走行可能な路面を検出し、前方の目標点を計算して、仮想 Xbox
 コントローラーからアナログ運転入力を送ります。
 
-### v0.5.0 説明
+### v0.6.0 説明
 
 このリリースは、GeForce NOW、Shadow PC、Xbox Cloud Gaming などの低遅延クラウド
 環境、または安定したドライビングカメラを持つ Windows ゲームウィンドウ向けです。

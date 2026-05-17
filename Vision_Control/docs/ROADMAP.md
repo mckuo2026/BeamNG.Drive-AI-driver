@@ -11,6 +11,7 @@
 
 ## v0.6.0
 
+- Focus watchdog complete.
 - Add fixture-based screenshot tests.
 - Add capture latency telemetry.
 - Add automatic ROI calibration.

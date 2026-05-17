@@ -37,7 +37,7 @@ from .capture.dxcam_roi import (
     RoiCapture,
     _draw_perception_roi_overlay,
 )
-from .capture.window_focus import find_window_by_title
+from .capture.window_focus import find_window_by_title, is_foreground
 from .config import Roi
 from .control.gamepad import GamepadBackend
 from .perception import CLASS_ROAD, apply_perception_roi
@@ -79,6 +79,12 @@ class VisionEngine:
     CAPTURE_FPS:         int             = 60
     BLACK_FRAME_MEAN_THRESHOLD: float = 5.0
     BLACK_FRAME_FALLBACK_COUNT: int = 30
+    # Focus watchdog: when Drive output is enabled and the captured window
+    # loses foreground, auto-pause within this many seconds.
+    FOCUS_CHECK_INTERVAL_S:     float = 0.5
+    # Don't fire the watchdog for this many seconds after start() to give
+    # the user time to click the game window after pressing Start.
+    FOCUS_GRACE_PERIOD_S:       float = 3.0
 
     def __init__(self) -> None:
         self._lock        = threading.Lock()
@@ -101,6 +107,11 @@ class VisionEngine:
         self._capture_mode: str = "auto"
         self._capture_roi: Roi | None = None
         self._black_frame_count: int = 0
+        # Focus watchdog state
+        self._target_hwnd:        int   = 0
+        self._last_focus_check:   float = 0.0
+        self._run_started_at:     float = 0.0
+        self._target_was_focused: bool  = True
 
     # ── thread-safe getters / setters ─────────────────────────────────────
     def get_state(self) -> tuple[State, str]:
@@ -228,6 +239,12 @@ class VisionEngine:
             self._log(f"Capture started ({self.PREVIEW_TARGET_SIZE[0]}x"
                       f"{self.PREVIEW_TARGET_SIZE[1]} @ {self.CAPTURE_FPS}fps, "
                       f"backend={self._cap.stats.get('backend', 'dxcam')})")
+            # Cache the HWND for the focus watchdog; both capture backends
+            # store it on `_hwnd` after start().
+            self._target_hwnd        = int(getattr(self._cap, "_hwnd", 0) or 0)
+            self._run_started_at     = time.perf_counter()
+            self._target_was_focused = True
+            self._last_focus_check   = 0.0
 
             # 3. Segmenter (LAB fallback for now; ONNX is post-M1).
             self._seg = AdaptiveLabSegmenter(n_calib_frames=24)
@@ -325,6 +342,7 @@ class VisionEngine:
                 continue
             if self._maybe_switch_black_window_capture(bgr):
                 continue
+            self._check_focus_watchdog()
 
             paused = self._pause_evt.is_set()
 
@@ -445,6 +463,47 @@ class VisionEngine:
                     (8, 16), cv2.FONT_HERSHEY_SIMPLEX, 0.42,
                     (255, 255, 255), 1, cv2.LINE_AA)
         return out
+
+    def _check_focus_watchdog(self) -> None:
+        """Auto-pause when Drive is on and the target window loses focus.
+
+        Fires at most every FOCUS_CHECK_INTERVAL_S. Skipped during a short
+        grace period after start() so the user can click into the game
+        without being interrupted. Only acts when state is RUNNING and
+        Drive output is enabled — preview-only sessions are free to alt-tab.
+
+        Does NOT auto-resume: when focus returns the user must press
+        Resume / Pause toggle (or the E hotkey) explicitly, so the car
+        cannot suddenly start driving the instant the window comes back.
+        """
+        if not self._target_hwnd or not self._drive:
+            self._target_was_focused = True
+            return
+
+        now = time.perf_counter()
+        if now - self._run_started_at < self.FOCUS_GRACE_PERIOD_S:
+            return
+        if now - self._last_focus_check < self.FOCUS_CHECK_INTERVAL_S:
+            return
+        self._last_focus_check = now
+
+        with self._lock:
+            state = self._state
+        if state != State.RUNNING:
+            # Manually paused / stopping — let the user handle it.
+            self._target_was_focused = True
+            return
+
+        if is_foreground(self._target_hwnd):
+            if not self._target_was_focused:
+                self._log("Target window regained focus (press Resume or E to drive again)")
+            self._target_was_focused = True
+            return
+
+        if self._target_was_focused:
+            self._log("Auto-paused: target window lost focus while Drive was ON")
+        self._target_was_focused = False
+        self.pause()
 
     def _maybe_switch_black_window_capture(self, bgr: np.ndarray) -> bool:
         """Fallback from window-only capture when Auto sees repeated black frames."""

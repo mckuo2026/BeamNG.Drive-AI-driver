@@ -2,6 +2,23 @@
 
 All notable changes to BeamNG and Horizon Driver are documented here.
 
+## [0.6.0] - 2026-05-17
+
+### Added
+
+- Focus watchdog in `VisionEngine`: when Drive output is enabled and the
+  captured game window loses foreground focus, the engine auto-pauses
+  within ~0.5 seconds. Does NOT auto-resume — the user must press
+  Resume / the E hotkey, so the car cannot suddenly drive when the user
+  alt-tabs back into the game window.
+- 3-second grace period after `start()` before the watchdog fires, so
+  clicking the game window after pressing Start doesn't trigger an
+  immediate auto-pause.
+- Watchdog is silent in preview-only mode (Drive switch off) — users can
+  monitor telemetry from other windows freely.
+- `0.6.0` includes the `0.5.0` capture hardening work: cached GDI resources,
+  black-frame fallback to DXGI ROI, and `tools.preview --capture`.
+
 ## [0.5.0] - 2026-05-17
 
 ### Added
