@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Vision_Control are documented here.
+All notable changes to BeamNG and Horizon Driver are documented here.
 
 ## [1.0.0] - 2026-05-17
 

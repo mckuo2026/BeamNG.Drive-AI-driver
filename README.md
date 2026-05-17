@@ -1,9 +1,10 @@
-# Vision_Control
+# BeamNG and Horizon Driver
 
-Vision_Control is a Windows visual driving assistant for cloud racing games and
-local driving simulators. It reads the game window, identifies the drivable
-road area, plans a lookahead point, and sends smooth analog steering,
-throttle, and brake output through a virtual Xbox controller.
+BeamNG and Horizon Driver is a Windows visual driving assistant for BeamNG.drive,
+Forza Horizon style racing games, cloud gaming windows, and local driving
+simulators. It reads the game window, identifies the drivable road area, plans a
+lookahead point, and sends smooth analog steering, throttle, and brake output
+through a virtual Xbox controller.
 
 The v1.0 work lives in [`Vision_Control/`](Vision_Control/).
 

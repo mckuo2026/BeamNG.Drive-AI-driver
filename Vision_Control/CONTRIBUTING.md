@@ -1,8 +1,8 @@
 # Contributing
 
-Vision_Control is a Windows-first visual driving assistant. Contributions
-should keep the project usable for cloud-computer players who need low latency,
-clear UI, and simple setup.
+BeamNG and Horizon Driver is a Windows-first visual driving assistant.
+Contributions should keep the project usable for cloud-computer players who
+need low latency, clear UI, and simple setup.
 
 ## Local Setup
 

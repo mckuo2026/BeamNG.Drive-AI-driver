@@ -10,7 +10,7 @@ LANGUAGES: dict[str, str] = {
 
 TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
-        "app.title": "Vision_Control",
+        "app.title": "BeamNG and Horizon Driver",
         "label.window": "Window:",
         "label.capture": "Capture:",
         "label.language": "Language:",
@@ -52,7 +52,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "log.select_window": "Select a window first.",
     },
     "zh": {
-        "app.title": "Vision_Control",
+        "app.title": "BeamNG and Horizon Driver",
         "label.window": "窗口:",
         "label.capture": "捕获:",
         "label.language": "语言:",
@@ -91,7 +91,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "log.select_window": "请先选择一个窗口。",
     },
     "ja": {
-        "app.title": "Vision_Control",
+        "app.title": "BeamNG and Horizon Driver",
         "label.window": "ウィンドウ:",
         "label.capture": "キャプチャ:",
         "label.language": "言語:",

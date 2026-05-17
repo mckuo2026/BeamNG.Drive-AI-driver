@@ -1,6 +1,6 @@
 # Architecture
 
-Vision_Control is split into five layers:
+BeamNG and Horizon Driver is split into five layers:
 
 1. Capture reads the selected game window.
 2. Perception converts frames into road and obstacle signals.

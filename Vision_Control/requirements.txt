@@ -1,4 +1,4 @@
-# Vision_Control runtime dependencies
+# BeamNG and Horizon Driver runtime dependencies
 #
 # Install with install.bat on Windows, or:
 #   python -m pip install -r requirements.txt

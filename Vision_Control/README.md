@@ -1,9 +1,10 @@
-# Vision_Control
+# BeamNG and Horizon Driver
 
-Vision_Control is a Windows visual driving assistant for cloud racing games
-and local driving simulators. It does not call a game API. Instead, it captures
-the visible game client, detects the drivable road area, computes a lookahead
-target, and sends analog driving input through a virtual Xbox controller.
+BeamNG and Horizon Driver is a Windows visual driving assistant for BeamNG.drive,
+Forza Horizon style racing games, cloud gaming windows, and local driving
+simulators. It does not call a game API. Instead, it captures the visible game
+client, detects the drivable road area, computes a lookahead target, and sends
+analog driving input through a virtual Xbox controller.
 
 ## v1.0 Description
 
@@ -99,8 +100,8 @@ python -m vision_control.main --selftest
 
 ## Safety Notes
 
-Vision_Control sends real controller input to Windows when drive output is
-enabled. Keep the game in a safe test area while calibrating, and use the
+BeamNG and Horizon Driver sends real controller input to Windows when drive
+output is enabled. Keep the game in a safe test area while calibrating, and use the
 global `E` hotkey or `Stop` button if the output is not behaving as expected.
 
 Some games and cloud services may restrict automation. Use this project only

@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "vision-control"
+name = "beamng-horizon-driver"
 version = "1.0.0"
-description = "Window-based visual driving assistant for cloud racing games."
+description = "Window-based visual driving assistant for BeamNG.drive and Horizon-style racing games."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -35,6 +35,7 @@ dev = [
 ]
 
 [project.scripts]
+beamng-horizon-driver = "vision_control.main:main"
 vision-control = "vision_control.main:main"
 
 [tool.setuptools.packages.find]
