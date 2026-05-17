@@ -38,8 +38,8 @@ python -m vision_control.main --selftest
 ## Branches
 
 - `main`: stable repository branch.
-- `codex/*`: implementation branches created by Codex.
-- `feature/*`: focused human-authored feature branches.
+- `feature/*`: focused implementation branches.
+- `release/*`: release preparation branches.
 
 ## Pull Request Checklist
 
