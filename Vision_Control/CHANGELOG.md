@@ -17,6 +17,7 @@ All notable changes to BeamNG and Horizon Driver are documented here.
 ### Changed
 
 - Version bumped to `1.0.0`.
+- README files now include English, Chinese, and Japanese sections.
 - Default language changed to English.
 - Default window candidates now include GeForce NOW, BeamNG.drive, Forza
   Horizon, and Xbox Cloud Gaming style titles.
