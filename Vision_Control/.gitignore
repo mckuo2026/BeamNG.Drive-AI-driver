@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Model files
+models/*.onnx
+models/*.pt
+models/*.bin
+
+# Local config
+config.json
+config.local.json
+
+# Logs
+logs/
+*.log
+
+# Large fixture media
+tests/fixtures/*.png
+tests/fixtures/*.jpg
+tests/fixtures/*.mp4
+!tests/fixtures/README.md
+!tests/fixtures/*.json
+
+# Screenshots and recordings
+captures/
+recordings/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak

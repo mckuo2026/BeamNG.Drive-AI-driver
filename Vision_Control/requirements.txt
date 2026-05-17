@@ -1,0 +1,22 @@
+# Vision_Control runtime dependencies
+#
+# Install with install.bat on Windows, or:
+#   python -m pip install -r requirements.txt
+
+# Capture
+dxcam>=0.0.5
+pywin32>=306
+
+# Perception
+onnxruntime-directml>=1.17.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# Control
+vgamepad>=0.0.8
+
+# UI
+Pillow>=10.0.0
+
+# Utilities
+requests>=2.31.0

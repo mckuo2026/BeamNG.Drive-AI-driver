@@ -1,0 +1,8 @@
+# Vision_Control development dependencies
+-r requirements.txt
+pytest>=8.0
+pytest-cov>=5.0
+ruff>=0.4
+mypy>=1.10
+types-Pillow
+types-requests

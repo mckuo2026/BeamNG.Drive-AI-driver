@@ -1,0 +1,145 @@
+"""Small runtime translation table for the control panel."""
+from __future__ import annotations
+
+LANGUAGES: dict[str, str] = {
+    "en": "English",
+    "zh": "中文",
+    "ja": "日本語",
+}
+
+
+TRANSLATIONS: dict[str, dict[str, str]] = {
+    "en": {
+        "app.title": "Vision_Control",
+        "label.window": "Window:",
+        "label.capture": "Capture:",
+        "label.language": "Language:",
+        "button.refresh": "Refresh",
+        "button.start": "Start",
+        "button.pause": "Pause",
+        "button.resume": "Resume",
+        "button.stop": "Stop",
+        "button.recalibrate": "Recalibrate",
+        "check.drive": "Drive output",
+        "hint.hotkey": "Hotkey: press E anywhere to pause or resume",
+        "frame.preview": "Preview",
+        "frame.telemetry": "Telemetry",
+        "frame.log": "Log",
+        "telemetry.state": "State",
+        "telemetry.fps": "FPS",
+        "telemetry.steer": "Steer",
+        "telemetry.throttle": "Throttle",
+        "telemetry.brake": "Brake",
+        "telemetry.road": "Road %",
+        "telemetry.confidence": "Confidence",
+        "telemetry.calibration": "Calibration",
+        "telemetry.drive": "Drive",
+        "telemetry.gamepad": "Gamepad",
+        "telemetry.capture": "Capture",
+        "capture_mode.auto": "Auto",
+        "capture_mode.window": "Window only",
+        "capture_mode.dxcam": "DXGI ROI",
+        "status.ready": "ready",
+        "status.on": "ON",
+        "status.off": "off",
+        "status.ok": "ok",
+        "status.none": "-",
+        "log.panel_hidden": "Panel hidden from screen capture.",
+        "log.panel_visible_warning": (
+            "WARN: could not hide the panel from capture. Move this window "
+            "outside the game area to avoid recursive preview capture."
+        ),
+        "log.select_window": "Select a window first.",
+    },
+    "zh": {
+        "app.title": "Vision_Control",
+        "label.window": "窗口:",
+        "label.capture": "捕获:",
+        "label.language": "语言:",
+        "button.refresh": "刷新",
+        "button.start": "启动",
+        "button.pause": "暂停",
+        "button.resume": "继续",
+        "button.stop": "停止",
+        "button.recalibrate": "重新校准",
+        "check.drive": "输出驾驶控制",
+        "hint.hotkey": "热键: 在任意窗口按 E 暂停或继续",
+        "frame.preview": "预览",
+        "frame.telemetry": "遥测",
+        "frame.log": "日志",
+        "telemetry.state": "状态",
+        "telemetry.fps": "帧率",
+        "telemetry.steer": "转向",
+        "telemetry.throttle": "油门",
+        "telemetry.brake": "刹车",
+        "telemetry.road": "道路 %",
+        "telemetry.confidence": "置信度",
+        "telemetry.calibration": "校准",
+        "telemetry.drive": "驾驶",
+        "telemetry.gamepad": "手柄",
+        "telemetry.capture": "捕获",
+        "capture_mode.auto": "自动",
+        "capture_mode.window": "仅游戏窗口",
+        "capture_mode.dxcam": "DXGI 区域",
+        "status.ready": "就绪",
+        "status.on": "开",
+        "status.off": "关",
+        "status.ok": "正常",
+        "status.none": "-",
+        "log.panel_hidden": "控制面板已从屏幕捕获中隐藏。",
+        "log.panel_visible_warning": "警告: 无法隐藏控制面板，请把它移出游戏区域以避免递归预览。",
+        "log.select_window": "请先选择一个窗口。",
+    },
+    "ja": {
+        "app.title": "Vision_Control",
+        "label.window": "ウィンドウ:",
+        "label.capture": "キャプチャ:",
+        "label.language": "言語:",
+        "button.refresh": "更新",
+        "button.start": "開始",
+        "button.pause": "一時停止",
+        "button.resume": "再開",
+        "button.stop": "停止",
+        "button.recalibrate": "再キャリブレーション",
+        "check.drive": "運転出力",
+        "hint.hotkey": "ホットキー: どこでも E で一時停止または再開",
+        "frame.preview": "プレビュー",
+        "frame.telemetry": "テレメトリ",
+        "frame.log": "ログ",
+        "telemetry.state": "状態",
+        "telemetry.fps": "FPS",
+        "telemetry.steer": "ステア",
+        "telemetry.throttle": "アクセル",
+        "telemetry.brake": "ブレーキ",
+        "telemetry.road": "道路 %",
+        "telemetry.confidence": "信頼度",
+        "telemetry.calibration": "校正",
+        "telemetry.drive": "運転",
+        "telemetry.gamepad": "ゲームパッド",
+        "telemetry.capture": "キャプチャ",
+        "capture_mode.auto": "自動",
+        "capture_mode.window": "ウィンドウのみ",
+        "capture_mode.dxcam": "DXGI ROI",
+        "status.ready": "準備完了",
+        "status.on": "オン",
+        "status.off": "オフ",
+        "status.ok": "OK",
+        "status.none": "-",
+        "log.panel_hidden": "パネルを画面キャプチャから隠しました。",
+        "log.panel_visible_warning": "警告: パネルを隠せません。再帰プレビューを避けるためゲーム領域の外に移動してください。",
+        "log.select_window": "先にウィンドウを選択してください。",
+    },
+}
+
+
+def normalize_lang(lang: str | None) -> str:
+    """Return a supported language code, defaulting to English."""
+    if lang in TRANSLATIONS:
+        return str(lang)
+    return "en"
+
+
+def text(lang: str, key: str) -> str:
+    """Translate a key with English fallback."""
+    lang = normalize_lang(lang)
+    return TRANSLATIONS.get(lang, {}).get(key, TRANSLATIONS["en"].get(key, key))
