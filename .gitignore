@@ -1,0 +1,7 @@
+# Legacy local-only editions removed from GitHub
+BeamNGpy版/
+云游戏视觉版/
+
+# Local recordings and screenshots
+屏幕录制 *.mp4
+屏幕截图 *.png
