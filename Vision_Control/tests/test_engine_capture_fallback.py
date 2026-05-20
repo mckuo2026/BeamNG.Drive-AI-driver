@@ -58,7 +58,7 @@ def test_auto_capture_falls_back_after_repeated_black_frames(monkeypatch) -> Non
 
 
 def test_focus_watchdog_pauses_when_drive_window_loses_focus(monkeypatch) -> None:
-    monkeypatch.setattr("vision_control.engine.is_foreground", lambda _hwnd: False)
+    monkeypatch.setattr("vision_control.engine.get_foreground_hwnd", lambda: 999)
 
     engine = VisionEngine()
     engine._target_hwnd = 123
@@ -71,3 +71,20 @@ def test_focus_watchdog_pauses_when_drive_window_loses_focus(monkeypatch) -> Non
 
     state, _err = engine.get_state()
     assert state == State.PAUSED
+
+
+def test_focus_watchdog_allows_control_panel_focus(monkeypatch) -> None:
+    monkeypatch.setattr("vision_control.engine.get_foreground_hwnd", lambda: 456)
+
+    engine = VisionEngine()
+    engine._target_hwnd = 123
+    engine.set_gui_hwnd(456)
+    engine._drive = True
+    engine._run_started_at = -999.0
+    engine._last_focus_check = -999.0
+    engine._set_state(State.RUNNING)
+
+    engine._check_focus_watchdog()
+
+    state, _err = engine.get_state()
+    assert state == State.RUNNING

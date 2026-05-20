@@ -160,6 +160,11 @@ def is_foreground(hwnd: Hwnd) -> bool:
     return user32.GetForegroundWindow() == hwnd
 
 
+def get_foreground_hwnd() -> Hwnd:
+    """Return the HWND of whichever top-level window currently has the focus."""
+    return int(user32.GetForegroundWindow() or 0)
+
+
 def ensure_foreground(hwnd: Hwnd) -> bool:
     """Try hard to put hwnd in the foreground. Returns True iff it is afterwards.
 

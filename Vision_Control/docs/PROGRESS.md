@@ -1,10 +1,12 @@
 # Progress
 
-## Current Release: v0.6.0
+## Current Release: v0.7.2
 
-`0.6.0` closes M2 by adding the focus watchdog. The package will hold at
-`0.6.x` until obstacle handling, stuck recovery, and five-minute scenario
-stability evidence are in place.
+`0.7.2` is a game-profile refinement on top of the focus-watchdog fix:
+profiles now record the keyboard layout expected by each game while the
+primary control path remains virtual Xbox gamepad output. M3 still pending
+(obstacle / stuck / CPU profile); package stays at `0.7.x` until five-minute
+stability evidence is in place.
 
 ## Milestones
 
@@ -32,6 +34,8 @@ stability evidence are in place.
 | ISSUE-016 | Fixed | Auto capture mode falls back to DXGI ROI after repeated black `PrintWindow` frames. |
 | ISSUE-017 | Fixed | `tools.preview` accepts `--capture auto|window|dxcam` to match the GUI/headless path. |
 | ISSUE-018 | Fixed | Focus watchdog auto-pauses when Drive is on and the captured game window loses foreground (no auto-resume; 3 s grace period after Start). |
+| ISSUE-019 | Fixed | Per-game tuning profiles (`beamng` / `horizon` / `generic`) bundle HUD-aware ROI, lookahead row, and steer gain. Selectable from GUI + `--profile` CLI flag; persisted in config.json. |
+| ISSUE-020 | Fixed | Focus watchdog incorrectly auto-paused when the user enabled Drive output, because clicking the panel checkbox makes the panel foreground for a moment. The watchdog now allows the panel's own HWND as a valid foreground; it only pauses when focus leaves both the game and the panel. |
 
 ## Open Work
 

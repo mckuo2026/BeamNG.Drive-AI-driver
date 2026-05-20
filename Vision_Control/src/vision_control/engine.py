@@ -37,8 +37,8 @@ from .capture.dxcam_roi import (
     RoiCapture,
     _draw_perception_roi_overlay,
 )
-from .capture.window_focus import find_window_by_title, is_foreground
-from .config import Roi
+from .capture.window_focus import find_window_by_title, get_foreground_hwnd
+from .config import GAME_PROFILES, GameProfile, Roi
 from .control.gamepad import GamepadBackend
 from .perception import CLASS_ROAD, apply_perception_roi
 from .perception.fallback_hsv import AdaptiveLabSegmenter, _overlay_mask
@@ -109,9 +109,12 @@ class VisionEngine:
         self._black_frame_count: int = 0
         # Focus watchdog state
         self._target_hwnd:        int   = 0
+        self._gui_hwnd:           int   = 0
         self._last_focus_check:   float = 0.0
         self._run_started_at:     float = 0.0
         self._target_was_focused: bool  = True
+        # Game profile: per-title HUD-aware ROI + Pure Pursuit tuning.
+        self._active_profile: GameProfile = GAME_PROFILES["beamng"]
 
     # ── thread-safe getters / setters ─────────────────────────────────────
     def get_state(self) -> tuple[State, str]:
@@ -154,13 +157,31 @@ class VisionEngine:
             self._seg.reset()
             self._log("Segmenter recalibrating")
 
+    def set_gui_hwnd(self, hwnd: int) -> None:
+        """Tell the engine which HWND is our own control panel.
+
+        The focus watchdog will treat that HWND as a legitimate foreground
+        target, so clicking the Drive checkbox or any other control on the
+        panel does NOT trigger an auto-pause. Without this, the moment the
+        user enables Drive the panel is foreground (because they just
+        clicked it), the watchdog sees "not the game window", and pauses
+        before the user even alt-tabs back.
+        """
+        self._gui_hwnd = int(hwnd or 0)
+
     # ── lifecycle ─────────────────────────────────────────────────────────
-    def start(self, window_title: str, capture_backend: str = "auto") -> None:
+    def start(self, window_title: str, capture_backend: str = "auto",
+              game_profile: str = "beamng") -> None:
         with self._lock:
             if self._state in (State.STARTING, State.RUNNING, State.PAUSED, State.STOPPING):
                 return
             self._state = State.STARTING
             self._error_msg = ""
+        # Resolve the profile up front; fall back silently to "beamng" if a
+        # stale config.json references a profile we no longer ship.
+        self._active_profile = GAME_PROFILES.get(
+            game_profile, GAME_PROFILES["beamng"]
+        )
         self._stop_evt.clear()
         self._pause_evt.clear()
         self._worker = threading.Thread(
@@ -239,6 +260,12 @@ class VisionEngine:
             self._log(f"Capture started ({self.PREVIEW_TARGET_SIZE[0]}x"
                       f"{self.PREVIEW_TARGET_SIZE[1]} @ {self.CAPTURE_FPS}fps, "
                       f"backend={self._cap.stats.get('backend', 'dxcam')})")
+            self._log(
+                f"Game profile: {self._active_profile.name} "
+                f"(lookahead {self._active_profile.lookahead_pct:.2f}, "
+                f"steer gain {self._active_profile.steer_gain:.2f}, "
+                f"keys {self._active_profile.key_layout})"
+            )
             # Cache the HWND for the focus watchdog; both capture backends
             # store it on `_hwnd` after start().
             self._target_hwnd        = int(getattr(self._cap, "_hwnd", 0) or 0)
@@ -329,7 +356,8 @@ class VisionEngine:
 
     def _main_loop(self) -> None:
         assert self._cap and self._seg
-        perc_roi = Roi()    # config defaults, drawn as yellow overlay
+        profile  = self._active_profile
+        perc_roi = profile.perception_roi   # drawn as yellow overlay + segmenter crop
 
         fps_count    = 0
         fps_timer    = time.perf_counter()
@@ -364,9 +392,10 @@ class VisionEngine:
                 perc_input = apply_perception_roi(bgr, perc_roi)
                 mask = self._seg.run(perc_input)
                 road = (mask == CLASS_ROAD)
-                drivable = from_road_mask(road)
+                drivable = from_road_mask(road, lookahead_pct=profile.lookahead_pct)
                 target = compute_control(
-                    drivable, ObstacleInfo.empty(), bgr.shape[:2]
+                    drivable, ObstacleInfo.empty(), bgr.shape[:2],
+                    steer_gain=profile.steer_gain,
                 )
                 if paused:
                     steer = throttle = brake = 0.0
@@ -465,7 +494,8 @@ class VisionEngine:
         return out
 
     def _check_focus_watchdog(self) -> None:
-        """Auto-pause when Drive is on and the target window loses focus.
+        """Auto-pause when Drive is on and focus leaves both the target game
+        window AND our own control panel.
 
         Fires at most every FOCUS_CHECK_INTERVAL_S. Skipped during a short
         grace period after start() so the user can click into the game
@@ -475,6 +505,11 @@ class VisionEngine:
         Does NOT auto-resume: when focus returns the user must press
         Resume / Pause toggle (or the E hotkey) explicitly, so the car
         cannot suddenly start driving the instant the window comes back.
+
+        IMPORTANT: the Vision_Control GUI itself is considered a "valid"
+        foreground. Without that exception, the moment the user ticks the
+        Drive checkbox the panel becomes foreground and we'd auto-pause
+        before the user has a chance to alt-tab to the game.
         """
         if not self._target_hwnd or not self._drive:
             self._target_was_focused = True
@@ -494,14 +529,16 @@ class VisionEngine:
             self._target_was_focused = True
             return
 
-        if is_foreground(self._target_hwnd):
+        fg = get_foreground_hwnd()
+        # Valid foreground = the game itself OR our own GUI.
+        if fg == self._target_hwnd or (self._gui_hwnd and fg == self._gui_hwnd):
             if not self._target_was_focused:
-                self._log("Target window regained focus (press Resume or E to drive again)")
+                self._log("Focus returned (press Resume or E to drive again)")
             self._target_was_focused = True
             return
 
         if self._target_was_focused:
-            self._log("Auto-paused: target window lost focus while Drive was ON")
+            self._log("Auto-paused: focus left both the game and Vision_Control while Drive was ON")
         self._target_was_focused = False
         self.pause()
 

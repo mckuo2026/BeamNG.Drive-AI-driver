@@ -17,7 +17,7 @@ from ..capture.window_focus import (
     find_hwnd_by_exact_title,
     list_visible_windows,
 )
-from ..config import Config
+from ..config import Config, GAME_PROFILES
 from ..engine import State, VisionEngine
 from ..i18n import LANGUAGES, normalize_lang, text
 
@@ -26,6 +26,8 @@ PREVIEW_REFRESH_MS = 200
 TELEMETRY_REFRESH_MS = 100
 LOG_REFRESH_MS = 250
 CAPTURE_MODES = ("auto", "window", "dxcam")
+# Iterate GAME_PROFILES so panel picks up new profiles automatically.
+PROFILE_KEYS = tuple(GAME_PROFILES.keys())
 
 
 class _HotkeyPoller:
@@ -90,6 +92,12 @@ class ControlPanel:
         self._apply_language()
         self.root.update_idletasks()
         self._exclude_self_from_capture()
+        # Tell the engine which HWND is "us" so the focus watchdog won't
+        # auto-pause the moment the user clicks the Drive checkbox.
+        try:
+            self.engine.set_gui_hwnd(int(self.root.winfo_id() or 0))
+        except Exception:
+            pass
         self._wire_hotkeys()
         self._tick_preview()
         self._tick_telemetry()
@@ -139,7 +147,16 @@ class ControlPanel:
         self.capture_cb.grid(row=0, column=4, padx=(0, 12))
         self.capture_cb.bind("<<ComboboxSelected>>", self._on_capture_changed)
 
-        self._track(ttk.Label(top), "label.language").grid(row=0, column=5, padx=(0, 6))
+        # Game profile (per-title HUD-aware ROI + steering tuning).
+        self._track(ttk.Label(top), "label.profile").grid(row=0, column=5, padx=(0, 6))
+        self.profile_var = tk.StringVar()
+        self.profile_cb = ttk.Combobox(
+            top, textvariable=self.profile_var, state="readonly", width=18
+        )
+        self.profile_cb.grid(row=0, column=6, padx=(0, 12))
+        self.profile_cb.bind("<<ComboboxSelected>>", self._on_profile_changed)
+
+        self._track(ttk.Label(top), "label.language").grid(row=0, column=7, padx=(0, 6))
         self.lang_var = tk.StringVar(value=LANGUAGES[self.lang])
         self.lang_cb = ttk.Combobox(
             top,
@@ -148,7 +165,7 @@ class ControlPanel:
             state="readonly",
             width=12,
         )
-        self.lang_cb.grid(row=0, column=6)
+        self.lang_cb.grid(row=0, column=8)
         self.lang_cb.bind("<<ComboboxSelected>>", self._on_language_changed)
         self._refresh_windows()
 
@@ -247,6 +264,7 @@ class ControlPanel:
                 pass
         self.lang_var.set(LANGUAGES[self.lang])
         self._refresh_capture_mode_values()
+        self._refresh_profile_values()
         self._tick_telemetry_once()
 
     def _refresh_capture_mode_values(self) -> None:
@@ -263,6 +281,23 @@ class ControlPanel:
         configured = getattr(self.cfg.capture, "backend", "auto")
         return configured if configured in CAPTURE_MODES else "auto"
 
+    def _refresh_profile_values(self) -> None:
+        """Update the profile combobox display text after a language switch."""
+        current_key = self._profile_key()
+        values = [self._t(f"profile.{key}") for key in PROFILE_KEYS]
+        self.profile_cb["values"] = values
+        self.profile_cb["width"] = max(14, max(len(v) for v in values) + 2)
+        self.profile_var.set(self._t(f"profile.{current_key}"))
+
+    def _profile_key(self) -> str:
+        """Map the current combobox display string back to a profile key."""
+        display = self.profile_var.get()
+        for key in PROFILE_KEYS:
+            if display == self._t(f"profile.{key}"):
+                return key
+        configured = getattr(self.cfg, "game_profile", "beamng")
+        return configured if configured in PROFILE_KEYS else "beamng"
+
     def _on_language_changed(self, _event: object | None = None) -> None:
         selected = self.lang_var.get()
         for code, display in LANGUAGES.items():
@@ -275,6 +310,10 @@ class ControlPanel:
 
     def _on_capture_changed(self, _event: object | None = None) -> None:
         self.cfg.capture.backend = self._capture_mode_key()
+        self.cfg.save()
+
+    def _on_profile_changed(self, _event: object | None = None) -> None:
+        self.cfg.game_profile = self._profile_key()
         self.cfg.save()
 
     def _exclude_self_from_capture(self) -> None:
@@ -316,7 +355,11 @@ class ControlPanel:
         if not title:
             self._append_log(self._t("log.select_window"))
             return
-        self.engine.start(title, capture_backend=self._capture_mode_key())
+        self.engine.start(
+            title,
+            capture_backend=self._capture_mode_key(),
+            game_profile=self._profile_key(),
+        )
 
     def _on_pause(self) -> None:
         state, _ = self.engine.get_state()

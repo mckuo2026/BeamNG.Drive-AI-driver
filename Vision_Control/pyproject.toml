@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beamng-horizon-driver"
-version = "0.6.0"
+version = "0.7.2"
 description = "Window-based visual driving assistant for BeamNG.drive and Horizon-style racing games."
 readme = "README.md"
 requires-python = ">=3.10"

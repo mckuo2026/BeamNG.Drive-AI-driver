@@ -56,13 +56,14 @@ def selftest() -> int:
     return 0
 
 
-def headless(window: str, capture: str = "auto") -> int:
+def headless(window: str, capture: str = "auto",
+             profile: str = "beamng") -> int:
     """Run the engine without GUI — useful for CI smoke and benchmarking."""
     import time
     from .engine import State, VisionEngine
 
     engine = VisionEngine()
-    engine.start(window, capture_backend=capture)
+    engine.start(window, capture_backend=capture, game_profile=profile)
     print(f"Headless engine started against window: {window!r}")
     print("Press Ctrl-C to stop.")
     try:
@@ -114,6 +115,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--capture", choices=["auto", "window", "dxcam"],
                         default="auto",
                         help="capture backend for --headless (default: auto)")
+    parser.add_argument("--profile",
+                        choices=["beamng", "horizon", "generic"],
+                        default="beamng",
+                        help="game tuning profile for --headless (default: beamng)")
     parser.add_argument("--version", action="version", version=__version__)
     args = parser.parse_args(argv)
 
@@ -123,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
         if not args.window:
             print("--headless requires --window TITLE")
             return 2
-        return headless(args.window, args.capture)
+        return headless(args.window, args.capture, args.profile)
 
     return gui()
 

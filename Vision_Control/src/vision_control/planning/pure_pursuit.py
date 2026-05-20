@@ -13,7 +13,8 @@ def compute(drivable: DrivableArea | None,
             obstacles: ObstacleInfo,
             frame_size: tuple[int, int],
             brake_distance_pct: float = 0.30,
-            slow_distance_pct:  float = 0.55) -> ControlTarget:
+            slow_distance_pct:  float = 0.55,
+            steer_gain:         float = 0.80) -> ControlTarget:
     """Translate perception output into a steer/throttle/brake triple.
 
     Coordinate convention: image frame, x→right, y→down.
@@ -40,13 +41,12 @@ def compute(drivable: DrivableArea | None,
 
     # alpha = angle to lookahead, ell = distance.
     alpha = math.atan2(dx, dy)
-    # δ ∝ 2L sin(α) / ell — with L absorbed into a gain.
-    # Gain 0.8 (was 2.0) tames the swerve-left-swerve-right oscillation
-    # caused by per-frame lookahead jitter from the LAB segmenter; with
-    # better perception this can creep back up.
-    STEER_GAIN    = 0.8
+    # δ ∝ 2L sin(α) / ell — with L absorbed into `steer_gain`.
+    # 0.80 (was 2.0) tames the per-frame lookahead jitter from the LAB
+    # segmenter. Per-game profiles can lift this (e.g. Forza Horizon 0.90)
+    # when perception is steadier or the car reaches higher speed.
     STEER_DEADZONE = 0.08      # ignore tiny corrections that cause hunting
-    steer = STEER_GAIN * math.sin(alpha)
+    steer = steer_gain * math.sin(alpha)
     if abs(steer) < STEER_DEADZONE:
         steer = 0.0
     steer = max(-1.0, min(1.0, steer))

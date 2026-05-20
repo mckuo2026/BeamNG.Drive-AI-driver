@@ -2,6 +2,53 @@
 
 All notable changes to BeamNG and Horizon Driver are documented here.
 
+## [0.7.2] - 2026-05-17
+
+### Added
+
+- `GameProfile.key_layout` records the keyboard binding each game expects
+  (`beamng` → arrow keys, `horizon` / `generic` → WASD). The primary gamepad
+  path ignores it (XInput is layout-independent); it exists so the keyboard
+  control fallback can pick the right keys per game when it's wired up. The
+  active layout is printed in the startup log.
+
+## [0.7.1] - 2026-05-17
+
+### Fixed
+
+- Focus watchdog auto-paused as soon as the user enabled the Drive output
+  checkbox, because the Vision_Control panel itself becomes foreground at
+  that moment. Telemetry then read steer/throttle/brake = 0 even though the
+  user expected driving to start. The watchdog now treats the panel's own
+  HWND as a legitimate foreground (alongside the game window) — it only
+  auto-pauses when focus truly leaves to a third, unrelated window.
+- `engine.set_gui_hwnd()` lets the panel hand its top-level HWND to the
+  engine on startup so the watchdog can recognize it.
+
+## [0.7.0] - 2026-05-17
+
+### Added
+
+- Game profiles (`beamng`, `horizon`, `generic`) bundling per-title HUD-aware
+  perception ROI, Pure Pursuit lookahead row, and steering gain. The Forza
+  Horizon preset uses a thinner HUD crop and looks further ahead to suit the
+  higher base speed.
+- `GameProfile` dataclass and `GAME_PROFILES` registry in `config.py` —
+  adding a new profile key automatically populates the panel combobox.
+- Profile combobox in the control panel (alongside Capture and Language)
+  with Chinese / English / Japanese labels. Selection persists to
+  `config.json` via `Config.game_profile`.
+- `--profile {beamng,horizon,generic}` flag on `python -m vision_control.main
+  --headless` for scripted runs against different games.
+- `pure_pursuit.compute()` accepts an optional `steer_gain` parameter so the
+  engine can apply the active profile's gain without touching planning code.
+
+### Changed
+
+- `VisionEngine.start()` accepts `game_profile=` and stores the resolved
+  `GameProfile` on the engine; the worker thread uses its perception ROI,
+  lookahead, and steer gain throughout the main loop.
+
 ## [0.6.0] - 2026-05-17
 
 ### Added
